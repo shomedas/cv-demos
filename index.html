@@ -1,22 +1,12 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="robots" content="noindex,nofollow">
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title id="page-title">My CV Demos & Links</title>
-  <meta name="description" content="A curated page with text, images and YouTube demo videos." />
-  <link rel="stylesheet" href="styles.css" />
-  <!-- JSON-LD template (can be dynamically updated per page/section if you create pages) -->
-  <script id="ld-json" type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "WebPage",
-    "name": "My CV Demos & Links",
-    "description": "A curated page with text, images and YouTube demo videos."
-  }
-  </script>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Computer Vision Portfolio</title>
+  <link rel="stylesheet" href="styles.css"/>
 </head>
+
 <body>
   <header class="site-header">
     <div class="wrap">
@@ -26,136 +16,123 @@
   </header>
 
   <main class="wrap" id="main">
-    <section id="about" class="card">
-      <!-- inserted from content.js -->
-    </section>
+    <section id="about" class="card"></section>
 
-    <section id="gallery" class="card">
-      <h2>Images</h2>
-      <div id="image-grid" class="grid"></div>
-    </section>
-
-    <section id="videos" class="card">
-      <h2>Videos</h2>
-      <div id="video-grid" class="grid"></div>
+    <section class="card">
+      <h2>Projects</h2>
+      <div id="projects-grid" class="projects-grid"></div>
     </section>
   </main>
 
   <footer class="site-footer">
     <div class="wrap">
-      <small>Videos hosted on YouTube. Thumbnails via YouTube CDN.</small>
+      <small>© 2025 Computer Vision Portfolio</small>
     </div>
   </footer>
 
-  <!-- video modal -->
-  <div id="videoModal" class="modal" aria-hidden="true" role="dialog" aria-label="Video player">
-    <div class="modal-body" role="document">
-      <button class="close-btn" id="modalClose" aria-label="Close video">✕</button>
-      <div class="video-wrap" id="modalContent"></div>
+  <!-- Modal (image/video viewer) -->
+  <div id="modal" class="modal" aria-hidden="true">
+    <div class="modal-body">
+      <button class="close-btn" id="modalClose">✕</button>
+      <div id="modalContent"></div>
     </div>
-    <div class="overlay" id="modalOverlay"></div>
+    <div id="modalOverlay" class="overlay"></div>
   </div>
 
   <script src="content.js"></script>
   <script>
-    // -------------------------
-    // Render content (reads CONTENT from content.js)
-    // -------------------------
-    const titleEl = document.getElementById('site-title');
-    const subtitleEl = document.getElementById('site-subtitle');
-    const aboutEl = document.getElementById('about');
-    const imageGrid = document.getElementById('image-grid');
-    const videoGrid = document.getElementById('video-grid');
-    const pageTitle = document.getElementById('page-title');
-
-    // Safety: small escape helper
+    // Escape helper
     function esc(s){ return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-
-    // fill header
-    titleEl.textContent = CONTENT.title || 'Title';
-    subtitleEl.textContent = CONTENT.tagline || '';
-
-    // update <title>
-    pageTitle.textContent = (CONTENT.title ? CONTENT.title + ' — ' : '') + (CONTENT.tagline || ' curated links');
-
-    // about / paragraphs
-    if(CONTENT.about && CONTENT.about.length){
-      const frag = document.createDocumentFragment();
-      CONTENT.about.forEach(p=>{
-        const para = document.createElement('p');
-        para.innerHTML = esc(p);
-        frag.appendChild(para);
-      });
-      aboutEl.appendChild(frag);
-    } else {
-      aboutEl.style.display = 'none';
-    }
-
-    // images
-    if(Array.isArray(CONTENT.images) && CONTENT.images.length){
-      CONTENT.images.forEach(img=>{
-        const a = document.createElement('a');
-        a.href = img.href || img.src;
-        a.target = '_blank';
-        a.rel = 'noopener';
-        a.className = 'img-card';
-        a.innerHTML = `
-          <img loading="lazy" src="${esc(img.src)}" alt="${esc(img.alt || '')}">
-          <div class="img-meta"><strong>${esc(img.title||'')}</strong><div class="caption">${esc(img.caption||'')}</div></div>
-        `;
-        imageGrid.appendChild(a);
-      });
-    } else {
-      document.getElementById('gallery').style.display = 'none';
-    }
-
-    // videos
     function youTubeThumb(id){ return `https://img.youtube.com/vi/${id}/hqdefault.jpg`; }
-    if(Array.isArray(CONTENT.videos) && CONTENT.videos.length){
-      CONTENT.videos.forEach(v=>{
-        const card = document.createElement('button');
-        card.className = 'video-card';
-        card.dataset.id = v.id;
-        card.setAttribute('aria-label', `Play ${v.title}`);
-        card.innerHTML = `
-          <img loading="lazy" alt="${esc(v.title)}" src="${esc(v.thumb || youTubeThumb(v.id))}">
-          <div class="meta">
-            <h3>${esc(v.title)}</h3>
-            <p class="desc">${esc(v.description || '')}</p>
-            <p class="channel">${esc(v.channel || '')}</p>
-          </div>`;
-        // click opens modal with embedded youtube iframe
-        card.addEventListener('click', ()=> openModal(v.id));
-        videoGrid.appendChild(card);
-      });
-    } else {
-      document.getElementById('videos').style.display = 'none';
-    }
 
-    // -------------------------
+    const titleEl = document.getElementById("site-title");
+    const subtitleEl = document.getElementById("site-subtitle");
+    const aboutEl = document.getElementById("about");
+    const grid = document.getElementById("projects-grid");
+
+    // Fill header
+    titleEl.textContent = CONTENT.title;
+    subtitleEl.textContent = CONTENT.tagline;
+
+    // About section
+    CONTENT.about.forEach(p => {
+      const para = document.createElement("p");
+      para.innerHTML = esc(p);
+      aboutEl.appendChild(para);
+    });
+
+    // Render projects
+    CONTENT.projects.forEach((proj) => {
+      const card = document.createElement("article");
+      card.className = "project-card";
+
+      const galleryHtml = proj.images.map((img, idx) => `
+        <img class="proj-thumb" src="${esc(img.src)}"
+             data-src="${esc(img.src)}" data-alt="${esc(img.alt||proj.title)}"/>
+      `).join("");
+
+      const videoButton = proj.videoId
+        ? `<button class="btn play-btn" data-video="${esc(proj.videoId)}">▶ Demo Video</button>`
+        : "";
+
+      const linkButton = proj.link
+        ? `<a class="btn link-btn" href="${esc(proj.link)}" target="_blank">GitHub</a>`
+        : "";
+
+      card.innerHTML = `
+        <div class="proj-left">
+          <div class="proj-gallery">${galleryHtml}</div>
+        </div>
+        <div class="proj-right">
+          <h3>${esc(proj.title)}</h3>
+          <div class="proj-desc">${proj.description}</div>
+          <div class="proj-meta">${videoButton} ${linkButton}</div>
+        </div>
+      `;
+
+      grid.appendChild(card);
+    });
+
     // Modal logic
-    // -------------------------
-    const modal = document.getElementById('videoModal');
-    const modalContent = document.getElementById('modalContent');
-    const modalClose = document.getElementById('modalClose');
-    const modalOverlay = document.getElementById('modalOverlay');
+    const modal = document.getElementById("modal");
+    const modalContent = document.getElementById("modalContent");
+    const modalClose = document.getElementById("modalClose");
+    const modalOverlay = document.getElementById("modalOverlay");
 
-    function openModal(yid){
-      modal.setAttribute('aria-hidden', 'false');
-      document.body.style.overflow = 'hidden';
-      modalContent.innerHTML = `<iframe width="100%" height="100%" src="https://www.youtube.com/embed/${encodeURIComponent(yid)}?autoplay=1&rel=0" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
+    function openImage(src, alt){
+      modalContent.innerHTML = `<img class="modal-img" src="${src}" alt="${alt}"/>`;
+      modal.setAttribute("aria-hidden","false");
+      document.body.style.overflow = "hidden";
     }
+
+    function openVideo(id){
+      modalContent.innerHTML = `
+        <iframe width="100%" height="100%"
+        src="https://www.youtube.com/embed/${id}?autoplay=1"
+        frameborder="0" allow="autoplay; encrypted-media" allowfullscreen>
+        </iframe>`;
+      modal.setAttribute("aria-hidden","false");
+      document.body.style.overflow = "hidden";
+    }
+
+    modalClose.onclick = closeModal;
+    modalOverlay.onclick = closeModal;
+
     function closeModal(){
-      modal.setAttribute('aria-hidden', 'true');
-      document.body.style.overflow = '';
-      modalContent.innerHTML = '';
+      modalContent.innerHTML = "";
+      modal.setAttribute("aria-hidden","true");
+      document.body.style.overflow = "";
     }
-    modalClose.addEventListener('click', closeModal);
-    modalOverlay.addEventListener('click', closeModal);
-    document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape') closeModal(); });
 
-    // Accessibility focus trap suggestion: for brevity not implemented, but recommended for production.
+    document.body.addEventListener("click", (e)=>{
+      if(e.target.classList.contains("proj-thumb")){
+        openImage(e.target.dataset.src, e.target.dataset.alt);
+      }
+      if(e.target.classList.contains("play-btn")){
+        openVideo(e.target.dataset.video);
+      }
+    });
+
   </script>
 </body>
 </html>
-
