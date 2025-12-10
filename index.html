@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title id="page-title">My CV Demos & Links</title>
+  <meta name="description" content="A curated page with text, images and YouTube demo videos." />
+  <link rel="stylesheet" href="styles.css" />
+  <!-- JSON-LD template (can be dynamically updated per page/section if you create pages) -->
+  <script id="ld-json" type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "My CV Demos & Links",
+    "description": "A curated page with text, images and YouTube demo videos."
+  }
+  </script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <h1 id="site-title"></h1>
+      <p id="site-subtitle" class="subtitle"></p>
+    </div>
+  </header>
+
+  <main class="wrap" id="main">
+    <section id="about" class="card">
+      <!-- inserted from content.js -->
+    </section>
+
+    <section id="gallery" class="card">
+      <h2>Images</h2>
+      <div id="image-grid" class="grid"></div>
+    </section>
+
+    <section id="videos" class="card">
+      <h2>Videos</h2>
+      <div id="video-grid" class="grid"></div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <small>Videos hosted on YouTube. Thumbnails via YouTube CDN.</small>
+    </div>
+  </footer>
+
+  <!-- video modal -->
+  <div id="videoModal" class="modal" aria-hidden="true" role="dialog" aria-label="Video player">
+    <div class="modal-body" role="document">
+      <button class="close-btn" id="modalClose" aria-label="Close video">✕</button>
+      <div class="video-wrap" id="modalContent"></div>
+    </div>
+    <div class="overlay" id="modalOverlay"></div>
+  </div>
+
+  <script src="content.js"></script>
+  <script>
+    // -------------------------
+    // Render content (reads CONTENT from content.js)
+    // -------------------------
+    const titleEl = document.getElementById('site-title');
+    const subtitleEl = document.getElementById('site-subtitle');
+    const aboutEl = document.getElementById('about');
+    const imageGrid = document.getElementById('image-grid');
+    const videoGrid = document.getElementById('video-grid');
+    const pageTitle = document.getElementById('page-title');
+
+    // Safety: small escape helper
+    function esc(s){ return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+    // fill header
+    titleEl.textContent = CONTENT.title || 'Title';
+    subtitleEl.textContent = CONTENT.tagline || '';
+
+    // update <title>
+    pageTitle.textContent = (CONTENT.title ? CONTENT.title + ' — ' : '') + (CONTENT.tagline || ' curated links');
+
+    // about / paragraphs
+    if(CONTENT.about && CONTENT.about.length){
+      const frag = document.createDocumentFragment();
+      CONTENT.about.forEach(p=>{
+        const para = document.createElement('p');
+        para.innerHTML = esc(p);
+        frag.appendChild(para);
+      });
+      aboutEl.appendChild(frag);
+    } else {
+      aboutEl.style.display = 'none';
+    }
+
+    // images
+    if(Array.isArray(CONTENT.images) && CONTENT.images.length){
+      CONTENT.images.forEach(img=>{
+        const a = document.createElement('a');
+        a.href = img.href || img.src;
+        a.target = '_blank';
+        a.rel = 'noopener';
+        a.className = 'img-card';
+        a.innerHTML = `
+          <img loading="lazy" src="${esc(img.src)}" alt="${esc(img.alt || '')}">
+          <div class="img-meta"><strong>${esc(img.title||'')}</strong><div class="caption">${esc(img.caption||'')}</div></div>
+        `;
+        imageGrid.appendChild(a);
+      });
+    } else {
+      document.getElementById('gallery').style.display = 'none';
+    }
+
+    // videos
+    function youTubeThumb(id){ return `https://img.youtube.com/vi/${id}/hqdefault.jpg`; }
+    if(Array.isArray(CONTENT.videos) && CONTENT.videos.length){
+      CONTENT.videos.forEach(v=>{
+        const card = document.createElement('button');
+        card.className = 'video-card';
+        card.dataset.id = v.id;
+        card.setAttribute('aria-label', `Play ${v.title}`);
+        card.innerHTML = `
+          <img loading="lazy" alt="${esc(v.title)}" src="${esc(v.thumb || youTubeThumb(v.id))}">
+          <div class="meta">
+            <h3>${esc(v.title)}</h3>
+            <p class="desc">${esc(v.description || '')}</p>
+            <p class="channel">${esc(v.channel || '')}</p>
+          </div>`;
+        // click opens modal with embedded youtube iframe
+        card.addEventListener('click', ()=> openModal(v.id));
+        videoGrid.appendChild(card);
+      });
+    } else {
+      document.getElementById('videos').style.display = 'none';
+    }
+
+    // -------------------------
+    // Modal logic
+    // -------------------------
+    const modal = document.getElementById('videoModal');
+    const modalContent = document.getElementById('modalContent');
+    const modalClose = document.getElementById('modalClose');
+    const modalOverlay = document.getElementById('modalOverlay');
+
+    function openModal(yid){
+      modal.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+      modalContent.innerHTML = `<iframe width="100%" height="100%" src="https://www.youtube.com/embed/${encodeURIComponent(yid)}?autoplay=1&rel=0" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
+    }
+    function closeModal(){
+      modal.setAttribute('aria-hidden', 'true');
+      document.body.style.overflow = '';
+      modalContent.innerHTML = '';
+    }
+    modalClose.addEventListener('click', closeModal);
+    modalOverlay.addEventListener('click', closeModal);
+    document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape') closeModal(); });
+
+    // Accessibility focus trap suggestion: for brevity not implemented, but recommended for production.
+  </script>
+</body>
+</html>
+
