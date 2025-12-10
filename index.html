@@ -10,8 +10,8 @@
   <header class="site-header">
     <div class="wrap header-grid">
       <div>
-        <h1 id="site-title"></h1>
-        <p id="site-subtitle" class="subtitle"></p>
+        <h1 id="site-title">Computer Vision Portfolio</h1>
+        <p id="site-subtitle" class="subtitle">Multi-view Geometry • Tracking/Segmentation • Point-cloud • GenAI</p>
       </div>
       <nav class="top-nav" aria-label="Jump to category">
         <a href="#col-mvg">Multi-view Geometry</a>
@@ -26,7 +26,7 @@
     <section id="about" class="card"></section>
 
     <!-- Four columns -->
-    <section class="card columns">
+    <section class="card columns" aria-label="Project columns">
       <div class="col" id="col-mvg"><h2>Multi-view Geometry</h2><div class="col-grid" id="col-mvg-grid"></div></div>
       <div class="col" id="col-track"><h2>Tracking / Segmentation</h2><div class="col-grid" id="col-track-grid"></div></div>
       <div class="col" id="col-pc"><h2>Point-cloud Analysis</h2><div class="col-grid" id="col-pc-grid"></div></div>
@@ -42,114 +42,133 @@
 
   <!-- Modal (image/video viewer) -->
   <div id="modal" class="modal" aria-hidden="true">
-    <div class="modal-body">
-      <button class="close-btn" id="modalClose">✕</button>
+    <div class="modal-body" role="dialog" aria-modal="true">
+      <button class="close-btn" id="modalClose" aria-label="Close">✕</button>
       <div id="modalContent"></div>
     </div>
-    <div id="modalOverlay" class="overlay"></div>
+    <div id="modalOverlay" class="overlay" aria-hidden="true"></div>
   </div>
 
+  <!-- content data -->
   <script src="content.js"></script>
+
+  <!-- Robust renderer (replace older render logic) -->
   <script>
-    // helper: escape for plain text (we allow HTML in description intentionally)
-    function esc(s){ return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-    function youTubeThumb(id){ return `https://img.youtube.com/vi/${id}/hqdefault.jpg`; }
+  /* Robust renderer for 4-column layout (keep below content.js) */
 
-    // DOM refs
-    const titleEl = document.getElementById("site-title");
-    const subtitleEl = document.getElementById("site-subtitle");
-    const aboutEl = document.getElementById("about");
-    const colMVG = document.getElementById("col-mvg-grid");
-    const colTrack = document.getElementById("col-track-grid");
-    const colPC = document.getElementById("col-pc-grid");
-    const colGen = document.getElementById("col-genai-grid");
+  function esc(s){ return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
-    // populate header and about
-    titleEl.textContent = CONTENT.title;
-    subtitleEl.textContent = CONTENT.tagline || '';
-    (CONTENT.about || []).forEach(p=>{
-      const para = document.createElement("p");
-      para.innerHTML = p; // allow simple HTML tags in about paragraphs
-      aboutEl.appendChild(para);
+  const titleEl = document.getElementById("site-title");
+  const subtitleEl = document.getElementById("site-subtitle");
+  const aboutEl = document.getElementById("about");
+  const colMVG = document.getElementById("col-mvg-grid");
+  const colTrack = document.getElementById("col-track-grid");
+  const colPC = document.getElementById("col-pc-grid");
+  const colGen = document.getElementById("col-genai-grid");
+
+  // fill header & about (content.js provides CONTENT)
+  try {
+    titleEl.textContent = (CONTENT && CONTENT.title) ? CONTENT.title : titleEl.textContent;
+    subtitleEl.textContent = (CONTENT && CONTENT.tagline) ? CONTENT.tagline : subtitleEl.textContent;
+  } catch(e){ console.warn("CONTENT not found. Make sure content.js is loaded.", e); }
+
+  (CONTENT && CONTENT.about || []).forEach(p => {
+    const para = document.createElement("p");
+    para.innerHTML = p;
+    aboutEl.appendChild(para);
+  });
+
+  /* mapping of aliases -> canonical keys */
+  const CATEGORY_ALIASES = {
+    multiview: ["multiview","multi-view","multi view","mvg","multi_view","multi","multi view geometry","multi-view geometry"],
+    tracking: ["tracking","segmentation","tracking/segmentation","tracking-segmentation","tracking-seg","seg","track","tracking & segmentation","tracking/segmentation"],
+    pointcloud: ["pointcloud","point-cloud","point cloud","pc","lidar","point_cloud","point cloud analysis"],
+    genai: ["genai","gen-ai","gen ai","generative","generative ai","gen"]
+  };
+  const aliasToKey = {};
+  Object.keys(CATEGORY_ALIASES).forEach(k=>{
+    CATEGORY_ALIASES[k].forEach(a => aliasToKey[a] = k);
+  });
+
+  function normalizeCategory(raw){
+    if(!raw) return "";
+    let s = String(raw).trim().toLowerCase();
+    s = s.replace(/[\/\-_&,]+/g, " ").replace(/\s+/g," ").trim();
+    if(aliasToKey[s]) return aliasToKey[s];
+    // fallback: check if any alias is substring
+    for(const alias in aliasToKey){
+      if(s.indexOf(alias) !== -1) return aliasToKey[alias];
+    }
+    return "";
+  }
+
+  function makeProjectCard(proj){
+    const card = document.createElement("article");
+    card.className = "project-card";
+
+    const thumbHtml = (proj.images && proj.images.length) ? `
+      <div class="proj-gallery">
+        ${proj.images.slice(0,2).map(im => `<img class="proj-thumb" src="${esc(im.src)}" data-src="${esc(im.src)}" data-alt="${esc(im.alt||proj.title)}">`).join('')}
+      </div>` : `<div class="proj-no-image">No image</div>`;
+
+    const videoBtn = proj.videoId ? `<button class="btn play-btn" data-video="${esc(proj.videoId)}">▶ Demo</button>` : '';
+    const linkBtn = proj.link ? `<a class="btn link-btn" href="${esc(proj.link)}" target="_blank" rel="noopener">Project</a>` : '';
+
+    card.innerHTML = `
+      <div class="card-left">${thumbHtml}</div>
+      <div class="card-right">
+        <h3>${esc(proj.title)}</h3>
+        <div class="proj-desc">${proj.description || ''}</div>
+        <div class="proj-tags">${(proj.tags||[]).map(t=>`<span class="tag">${esc(t)}</span>`).join(' ')}</div>
+        <div class="proj-actions">${videoBtn} ${linkBtn}</div>
+      </div>
+    `;
+    return card;
+  }
+
+  function insertProject(proj){
+    const raw = proj.category || "";
+    const key = normalizeCategory(raw);
+    const card = makeProjectCard(proj);
+    if(key === "multiview") { colMVG.appendChild(card); return; }
+    if(key === "tracking")  { colTrack.appendChild(card); return; }
+    if(key === "pointcloud"){ colPC.appendChild(card); return; }
+    if(key === "genai")     { colGen.appendChild(card); return; }
+
+    console.warn(`Unknown category "${raw}" for project "${proj.title}". Appending to Multi-view column by default.`);
+    colMVG.appendChild(card);
+  }
+
+  // render list
+  if(Array.isArray(CONTENT && CONTENT.projects)){
+    CONTENT.projects.forEach(proj => {
+      try { insertProject(proj); } catch(e) { console.error("Failed to insert project", proj, e); }
     });
+  } else {
+    console.warn("CONTENT.projects is not an array or is missing.");
+  }
 
-    // map category -> container
-    const colMap = {
-      "multiview": colMVG,
-      "tracking": colTrack,
-      "pointcloud": colPC,
-      "genai": colGen
-    };
+  /* Modal logic (images & videos) */
+  const modal = document.getElementById("modal");
+  const modalContent = document.getElementById("modalContent");
+  const modalClose = document.getElementById("modalClose");
+  const modalOverlay = document.getElementById("modalOverlay");
 
-    // helper to create project card
-    function makeProjectCard(proj){
-      const card = document.createElement("article");
-      card.className = "project-card";
+  function openImage(src, alt){ modalContent.innerHTML = `<img class="modal-img" src="${esc(src)}" alt="${esc(alt)}">`; modal.setAttribute("aria-hidden","false"); document.body.style.overflow = "hidden"; }
+  function openVideo(id){ modalContent.innerHTML = `<iframe width="100%" height="100%" src="https://www.youtube.com/embed/${encodeURIComponent(id)}?autoplay=1" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>`; modal.setAttribute("aria-hidden","false"); document.body.style.overflow = "hidden"; }
+  function closeModal(){ modalContent.innerHTML = ""; modal.setAttribute("aria-hidden","true"); document.body.style.overflow = ""; }
 
-      const thumbHtml = (proj.images && proj.images.length) ? `
-        <div class="proj-gallery">
-          ${proj.images.slice(0,2).map(im => `<img class="proj-thumb" src="${esc(im.src)}" data-src="${esc(im.src)}" data-alt="${esc(im.alt||proj.title)}">`).join('')}
-        </div>` : `<div class="proj-no-image">No image</div>`;
+  if(modalClose) modalClose.addEventListener('click', closeModal);
+  if(modalOverlay) modalOverlay.addEventListener('click', closeModal);
+  document.addEventListener('keydown', e => { if(e.key === 'Escape') closeModal(); });
 
-      const videoBtn = proj.videoId ? `<button class="btn play-btn" data-video="${esc(proj.videoId)}">▶ Demo</button>` : '';
-      const linkBtn = proj.link ? `<a class="btn link-btn" href="${esc(proj.link)}" target="_blank" rel="noopener">Project</a>` : '';
-
-      // allow basic HTML in description
-      card.innerHTML = `
-        <div class="card-left">${thumbHtml}</div>
-        <div class="card-right">
-          <h3>${esc(proj.title)}</h3>
-          <div class="proj-desc">${proj.description || ''}</div>
-          <div class="proj-tags">${(proj.tags||[]).map(t=>`<span class="tag">${esc(t)}</span>`).join(' ')}</div>
-          <div class="proj-actions">${videoBtn} ${linkBtn}</div>
-        </div>
-      `;
-      return card;
-    }
-
-    // render all projects into appropriate columns
-    (CONTENT.projects || []).forEach(proj => {
-      const cat = (proj.category || '').toLowerCase();
-      const target = colMap[cat];
-      const card = makeProjectCard(proj);
-      if(target) target.appendChild(card);
-      else {
-        // if category not recognized, append to first column
-        colMVG.appendChild(card);
-      }
-    });
-
-    // modal logic (image & video)
-    const modal = document.getElementById("modal");
-    const modalContent = document.getElementById("modalContent");
-    const modalClose = document.getElementById("modalClose");
-    const modalOverlay = document.getElementById("modalOverlay");
-
-    function openImage(src, alt){
-      modalContent.innerHTML = `<img class="modal-img" src="${src}" alt="${esc(alt)}">`;
-      modal.setAttribute("aria-hidden","false");
-      document.body.style.overflow = "hidden";
-    }
-    function openVideo(id){
-      modalContent.innerHTML = `<iframe width="100%" height="100%" src="https://www.youtube.com/embed/${id}?autoplay=1" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
-      modal.setAttribute("aria-hidden","false");
-      document.body.style.overflow = "hidden";
-    }
-    function closeModal(){
-      modalContent.innerHTML = "";
-      modal.setAttribute("aria-hidden","true");
-      document.body.style.overflow = "";
-    }
-    modalClose.addEventListener('click', closeModal);
-    modalOverlay.addEventListener('click', closeModal);
-    document.addEventListener('keydown', e => { if(e.key === 'Escape') closeModal(); });
-
-    // delegated clicks: thumbs and play buttons
-    document.body.addEventListener('click', e=>{
-      const t = e.target;
-      if(t.classList.contains('proj-thumb')) openImage(t.dataset.src || t.src, t.dataset.alt || '');
-      if(t.classList.contains('play-btn')) openVideo(t.dataset.video);
-    });
+  document.body.addEventListener('click', e=>{
+    const t = e.target;
+    if(t.classList && t.classList.contains('proj-thumb')) openImage(t.dataset.src || t.src, t.dataset.alt || '');
+    const p = t.closest && t.closest('.play-btn');
+    if(p) openVideo(p.dataset.video);
+  });
   </script>
+
 </body>
 </html>
