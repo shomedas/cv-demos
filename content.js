@@ -8,7 +8,7 @@ const CONTENT = {
   tagline: "Multi-view Geometry • Tracking/Segmentation • Point-cloud • GenAI",
   about: [
     "Welcome — browse projects by column. Click images to enlarge or Play to view demos.",
-    "Add new projects to the `projects` array and set `category` to one of: multiview, tracking, pointcloud, genai."
+    "Projects are set columnwise for multiview, tracking, pointcloud, genai."
   ],
 
   projects: [
