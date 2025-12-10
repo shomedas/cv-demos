@@ -23,6 +23,7 @@ const CONTENT = {
       category: "multiview",
       description: "Classical SfM pipeline producing sparse point clouds and camera poses.",
       images: [{ src: "https://placehold.co/800x450?text=SfM", alt:"SfM"}],
+      videoId: "dQw4w9WgXcQ",
       link: "https://github.com/yourrepo/sfm"
     },
 
@@ -40,6 +41,7 @@ const CONTENT = {
       category: "tracking",
       description: "Lightweight segmentation model running at 30+ FPS on edge devices.",
       images: [{ src: "https://placehold.co/800x450?text=Seg", alt:"Segmentation"}],
+      videoId: "dQw4w9WgXcQ",
       link: "https://github.com/yourrepo/seg"
     },
 
@@ -49,13 +51,15 @@ const CONTENT = {
       category: "pointcloud",
       description: "Robust ICP variants with color and feature-based initialization.",
       images: [{ src: "https://placehold.co/800x450?text=ICP", alt:"ICP"}],
-      videoId: "dQw4w9WgXcQ"
+      videoId: "dQw4w9WgXcQ",
+      link: "https://github.com/yourrepo/seg"
     },
     {
       title: "Dense LiDAR Processing",
       category: "pointcloud",
       description: "Filtering, ground removal, and semantic labeling of LiDAR scans.",
       images: [{ src: "https://placehold.co/800x450?text=LiDAR", alt:"LiDAR"}],
+      videoId: "dQw4w9WgXcQ",
       link: "https://github.com/yourrepo/lidar"
     },
 
@@ -66,6 +70,7 @@ const CONTENT = {
       description: "Conditional diffusion that refines coarse masks into high-quality segmentation.",
       images: [{ src: "https://placehold.co/800x450?text=Diffusion", alt:"Diffusion"}],
       videoId: "M7FIvfx5J10",
+      link: "https://github.com/yourrepo/diffusion"
       tags: ["diffusion","segmentation","genai"]
     },
     {
@@ -73,6 +78,7 @@ const CONTENT = {
       category: "genai",
       description: "Prototype pipeline generating textured 3D assets from text prompts.",
       images: [{ src: "https://placehold.co/800x450?text=Text+to+3D", alt:"Text2Mesh"}],
+      videoId: "M7FIvfx5J10",
       link: "https://github.com/yourrepo/text2mesh"
     }
   ]
